@@ -32,10 +32,14 @@ export default defineConfig(({ mode }) => {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   }
 
+  // Use Vercel preset only when deploying to Vercel. Otherwise (Docker, Node, etc.)
+  // use default Remix build output (build/server/index.js) so remix-serve works.
+  const presets = process.env.VERCEL ? [vercelPreset()] : [];
+
   return {
     plugins: [
       remix({
-        presets: [vercelPreset()],
+        presets,
         future: {
           v3_lazyRouteDiscovery: false,
           v3_relativeSplatPath: false,
