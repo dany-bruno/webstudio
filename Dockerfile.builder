@@ -7,12 +7,17 @@ RUN corepack enable && corepack prepare pnpm@9.14.4 --activate
 WORKDIR /app
 COPY . .
 
-# Increase Node heap for Vite/Remix build
+# Increase Node heap for Vite/Remix build. Unset VERCEL so Remix uses default
+# build output (build/server/index.js), not Vercel's .vercel/output.
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV VERCEL=
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter=@webstudio-is/http-client build
 RUN pnpm --filter=@webstudio-is/builder build
+
+# Fail the image build if Remix didn't produce the expected file (remix-serve needs it)
+RUN test -f /app/apps/builder/build/server/index.js || (echo "Missing build/server/index.js - check Remix build output" && exit 1)
 
 # Run stage – minimal runtime
 FROM node:22-bookworm-slim AS runner
@@ -26,6 +31,8 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.ya
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/packages /app/packages
 COPY --from=builder /app/apps /app/apps
+# Ensure build output is present (explicit copy so we never run without it)
+COPY --from=builder /app/apps/builder/build /app/apps/builder/build
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
