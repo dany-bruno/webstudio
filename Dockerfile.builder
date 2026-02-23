@@ -42,4 +42,4 @@ EXPOSE 3000
 
 # Run migrations then start the app (DATABASE_URL / DIRECT_URL must be set at runtime, e.g. Railway).
 WORKDIR /app
-CMD pnpm --filter=./packages/prisma-client migrations migrate --cwd apps/builder && cd apps/builder && pnpm start
+CMD pnpm --filter=./packages/prisma-client migrations migrate --cwd /app/apps/builder && cd apps/builder && pnpm start
