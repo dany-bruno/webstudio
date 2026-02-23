@@ -13,7 +13,8 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV VERCEL=
 
 RUN pnpm install --frozen-lockfile
-# Generate Prisma client so packages/prisma-client/src/__generated__ exists (needed for migrations at runtime)
+# Generate Prisma client for Debian OpenSSL 3 (Bookworm has libssl.so.3, not 1.1)
+ENV PRISMA_BINARY_TARGET='["debian-openssl-3.0.x"]'
 RUN pnpm --filter=@webstudio-is/prisma-client generate
 RUN pnpm --filter=@webstudio-is/http-client build
 RUN pnpm --filter=@webstudio-is/builder build
@@ -21,8 +22,11 @@ RUN pnpm --filter=@webstudio-is/builder build
 # Fail the image build if Remix didn't produce the expected file (remix-serve needs it)
 RUN test -f /app/apps/builder/build/server/index.js || (echo "Missing build/server/index.js - check Remix build output" && exit 1)
 
-# Run stage – minimal runtime
+# Run stage – minimal runtime (Prisma engine needs libssl)
 FROM node:22-bookworm-slim AS runner
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl libssl3 ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@9.14.4 --activate
 
