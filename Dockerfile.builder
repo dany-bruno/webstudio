@@ -13,6 +13,8 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV VERCEL=
 
 RUN pnpm install --frozen-lockfile
+# Generate Prisma client so packages/prisma-client/src/__generated__ exists (needed for migrations at runtime)
+RUN pnpm --filter=@webstudio-is/prisma-client generate
 RUN pnpm --filter=@webstudio-is/http-client build
 RUN pnpm --filter=@webstudio-is/builder build
 
