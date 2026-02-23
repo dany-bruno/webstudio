@@ -38,5 +38,6 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 EXPOSE 3000
 
-WORKDIR /app/apps/builder
-CMD ["pnpm", "start"]
+# Run migrations then start the app (DATABASE_URL / DIRECT_URL must be set at runtime, e.g. Railway).
+WORKDIR /app
+CMD pnpm --filter=./packages/prisma-client migrations migrate --cwd apps/builder && cd apps/builder && pnpm start
